@@ -5,94 +5,51 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="飲料紀錄">
-    
-    <title>飲料記錄小幫手</title>
+    <meta name="apple-mobile-web-app-title" content="飲料雲端版">
+    <title>飲料記錄小幫手(雲端)</title>
     <style>
-        /* 米白色/卡其色系主題 */
-        :root { 
-            --primary: #C7B299; 
-            --primary-text: #4A403A; 
-            --green: #558B6E; 
-            --gold: #D4A017; 
-            --bg: #F5F1ED; 
-            --card-bg: #ffffff; 
-        }
+        /* 樣式保持不變 */
+        :root { --primary: #C7B299; --primary-text: #4A403A; --green: #558B6E; --gold: #D4A017; --bg: #F5F1ED; --card-bg: #ffffff; }
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; padding-bottom: 50px; color: #4A403A; }
         .container { max-width: 500px; margin: 0 auto; }
-        
-        /* 統計卡片 */
         .stats-card { background: var(--primary); color: var(--primary-text); padding: 20px; border-radius: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(199, 178, 153, 0.3); }
         .stat-item { text-align: center; }
         .stat-val { font-size: 1.4em; font-weight: bold; }
         .stat-label { font-size: 0.8em; opacity: 0.8; margin-top: 5px; font-weight: 500;}
         .eco-stat .stat-val, .eco-stat .stat-label { color: #2c5e42; }
         .gift-stat { color: #4A403A; font-size: 0.7em; margin-top: 5px; opacity: 0.9; }
-
-        /* 輸入表單 */
         .input-group { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #E8E0D9;}
-        
-        /* 輸入框樣式 */
-        input[type="date"], 
-        input[type="text"], 
-        input[type="number"], 
-        select { 
-            width: 100%; 
-            padding: 12px; 
-            margin-bottom: 12px; 
-            border: 1px solid #DBC4A9; 
-            border-radius: 8px; 
-            box-sizing: border-box; /* 確保寬度整齊 */
-            background-color: #FFFCF9; 
-            color: #5D534A; 
-            outline: none;
-            font-family: inherit;
-            font-size: 1em;
-            -webkit-appearance: none;
-        }
-        
+        input[type="date"], input[type="text"], input[type="number"], select { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid #DBC4A9; border-radius: 8px; box-sizing: border-box; background-color: #FFFCF9; color: #5D534A; outline: none; font-family: inherit; font-size: 1em; -webkit-appearance: none; }
         input[type="date"] { display: block; }
         input:focus, select:focus { border-color: var(--primary); }
-
-        /* 選項區塊 */
         .options-row { display: flex; gap: 15px; margin-bottom: 20px; }
-        
         .checkbox-wrapper { flex: 1; display: flex; align-items: center; padding: 10px; cursor: pointer; background: #FFFCF9; border: 1px solid #DBC4A9; border-radius: 8px; }
         .checkbox-wrapper:active { background: #FDF5EE; }
         .checkbox-wrapper input { width: auto; margin: 0 8px 0 0; transform: scale(1.2); cursor: pointer; accent-color: var(--green); }
         .checkbox-wrapper label { cursor: pointer; font-weight: 500; color: #5D534A; font-size: 0.95em; flex-grow: 1;}
-        
         .checkbox-wrapper.gift-wrapper input { accent-color: var(--gold); }
         .eco-tag { color: var(--green); font-size: 0.8em; font-weight: bold;}
         .gift-tag { color: var(--gold); font-size: 0.8em; font-weight: bold;}
-
-        /* 按鈕樣式 */
         button { width: 100%; background: var(--primary); color: var(--primary-text); border: none; padding: 15px; border-radius: 8px; font-size: 1em; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 3px 6px rgba(199, 178, 153, 0.2); }
         button:hover { background: #BFA88E; }
         button:active { transform: scale(0.98); box-shadow: none; }
-
-        /* 列表 */
-        h3 { margin-top: 30px; color: #7D7065; font-weight: 600; }
+        button:disabled { background: #ccc; cursor: not-allowed; }
+        h3 { margin-top: 30px; color: #7D7065; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
+        .loading-text { font-size: 0.8em; color: #999; font-weight: normal; display: none; }
         .drink-list { list-style: none; padding: 0; }
         .drink-item { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); animation: fadeIn 0.3s ease; position: relative; overflow: hidden; border: 1px solid #F0EAE5;}
-        
         .drink-item.is-eco { border-left: 5px solid var(--green); }
         .drink-item.is-gift { border-left: 5px solid var(--gold); background-color: #FFFDF5; }
         .drink-item.is-eco.is-gift { border-left-width: 5px; border-left-style: solid; border-image: linear-gradient(to bottom, var(--green), var(--gold)) 1 100%; }
-
         .drink-info h4 { margin: 0 0 6px 0; font-size: 1.1em; display: flex; align-items: center; color: #4A403A; flex-wrap: wrap; gap: 5px;}
-        
         .badge { font-size: 0.75em; padding: 3px 7px; border-radius: 6px; font-weight: bold; display: inline-block;}
         .badge-eco { background: #E3F0E9; color: var(--green); }
         .badge-gift { background: #FFF3CD; color: #856404; }
-        
         .drink-detail { font-size: 0.85em; color: #9C8E83; }
         .drink-price-group { text-align: right; }
         .drink-price { font-weight: bold; color: #8C7B65; font-size: 1.2em; }
         .drink-original-price { font-size: 0.75em; color: #bbb; text-decoration: line-through; display: block;}
-        
         .delete-btn { background: #E6C9C9; color: #A85555; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8em; margin-left: 12px; cursor: pointer; box-shadow: none; width: auto;}
-        
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
@@ -101,17 +58,17 @@
 <div class="container">
     <div class="stats-card">
         <div class="stat-item">
-            <div class="stat-val" id="totalCount">0</div>
+            <div class="stat-val" id="totalCount">...</div>
             <div class="stat-label">累積杯數</div>
         </div>
         <div class="stat-item">
-            <div class="stat-val">$<span id="totalCost">0</span></div>
+            <div class="stat-val">$<span id="totalCost">...</span></div>
             <div class="stat-label">自己花費
                 <div class="gift-stat" id="giftStat"></div>
             </div>
         </div>
         <div class="stat-item eco-stat">
-            <div class="stat-val">$<span id="totalSaved">0</span></div>
+            <div class="stat-val">$<span id="totalSaved">...</span></div>
             <div class="stat-label">🌿環保省下</div>
         </div>
     </div>
@@ -159,39 +116,29 @@
             </div>
         </div>
 
-        <button onclick="addDrink()">＋ 記錄一杯</button>
+        <button id="submitBtn" onclick="addDrink()">＋ 記錄一杯</button>
     </div>
 
-    <h3>最近喝了什麼...</h3>
-    <ul class="drink-list" id="list">
-        </ul>
+    <h3>最近喝了什麼... <span id="loading" class="loading-text">資料同步中...</span></h3>
+    <ul class="drink-list" id="list"></ul>
     
-    <button onclick="clearAll()" style="background: #E0D6CD; color: #8C7B65; margin-top: 25px; font-size: 0.9em; box-shadow: none;">清除所有記錄</button>
-</div>
+    </div>
 
 <script>
-    let drinks = JSON.parse(localStorage.getItem('myDrinks_v2')) || [];
-    
-    // 初始化檢查
-    if(drinks.length > 0) {
-        let dirty = false;
-        drinks = drinks.map(d => {
-            if(d.isEco === undefined) { d.isEco = false; dirty = true; }
-            if(d.isGift === undefined) { d.isGift = false; dirty = true; } 
-            return d;
-        });
-        if(dirty) saveAndRender();
-    }
+    // 【請填入你的 Google Apps Script 網址】
+    const API_URL = "https://script.google.com/macros/s/AKfycbyO-bScC6jC1AR0zDS7uqukBCaGWzY6DsZQlB99rfm7HZHYR_q7XzkZfJM-HK14YKjC/exec";
 
-    // 設定預設日期為今天
+    let drinks = [];
+    
+    // 初始化
     const today = new Date();
-    // 修正時區問題，使用本地時間
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
     const day = String(today.getDate()).padStart(2, '0');
     document.getElementById('recordDate').value = `${year}-${month}-${day}`;
     
-    render();
+    // 程式一啟動，立刻抓資料
+    fetchData();
 
     function toggleEco() {
         const cb = document.getElementById('isEco');
@@ -203,11 +150,22 @@
         cb.checked = !cb.checked;
     }
 
-    function updateSuggestions() {
-        const shops = [...new Set(drinks.map(d => d.shop))];
-        const names = [...new Set(drinks.map(d => d.name))];
-        document.getElementById('shopList').innerHTML = shops.map(s => `<option value="${s}">`).join('');
-        document.getElementById('drinkList').innerHTML = names.map(n => `<option value="${n}">`).join('');
+    // 從雲端抓資料
+    function fetchData() {
+        showLoading(true);
+        fetch(API_URL)
+            .then(response => response.json())
+            .then(data => {
+                drinks = data;
+                // 雲端回來的日期如果是字串，可能格式不一，這裡簡單處理
+                render();
+                showLoading(false);
+            })
+            .catch(error => {
+                alert("讀取失敗，請檢查網路或網址！");
+                showLoading(false);
+                console.error(error);
+            });
     }
 
     function addDrink() {
@@ -226,41 +184,79 @@
         }
 
         const displayDate = dateInput.replace(/-/g, '/');
-
         const newDrink = {
-            id: Date.now(),
-            shop, name, price, sugar, ice, isEco, isGift,
-            date: displayDate
+            id: Date.now(), // 用時間當 ID
+            date: displayDate,
+            shop, name, price, sugar, ice, isEco, isGift
         };
 
+        // UI 先假裝新增成功 (讓感覺比較快)
         drinks.unshift(newDrink);
-        saveAndRender();
+        render();
         
-        // 保留日期，清空其他
-        document.getElementById('shopName').value = '';
-        document.getElementById('drinkName').value = '';
-        document.getElementById('price').value = '';
-        document.getElementById('isEco').checked = false;
-        document.getElementById('isGift').checked = false; 
+        // 傳送給後端
+        showLoading(true, "儲存中...");
+        const btn = document.getElementById('submitBtn');
+        btn.disabled = true;
+        btn.textContent = "☁️ 雲端寫入中...";
+
+        // 使用 fetch POST
+        fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors', // 關鍵：Apps Script 跨域需要用 no-cors
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(newDrink)
+        }).then(() => {
+            // 因為 no-cors 不會回傳內容，我們假設成功
+            showLoading(false);
+            btn.disabled = false;
+            btn.textContent = "＋ 記錄一杯";
+            
+            // 清空輸入
+            document.getElementById('shopName').value = '';
+            document.getElementById('drinkName').value = '';
+            document.getElementById('price').value = '';
+            document.getElementById('isEco').checked = false;
+            document.getElementById('isGift').checked = false;
+        }).catch(err => {
+            alert("上傳失敗 QQ");
+            btn.disabled = false;
+            btn.textContent = "＋ 記錄一杯";
+        });
     }
 
     function deleteDrink(id) {
-        if(confirm('確定要刪除這筆記錄嗎？')) {
-            drinks = drinks.filter(drink => drink.id !== id);
-            saveAndRender();
-        }
-    }
+        if(!confirm('確定要刪除這筆記錄嗎？(也會從試算表刪除)')) return;
 
-    function clearAll() {
-        if(confirm('確定要清空所有記錄嗎？不可恢復喔！')) {
-            drinks = [];
-            saveAndRender();
-        }
-    }
-
-    function saveAndRender() {
-        localStorage.setItem('myDrinks_v2', JSON.stringify(drinks));
+        // UI 先刪除
+        drinks = drinks.filter(drink => drink.id != id);
         render();
+
+        // 告訴後端刪除
+        showLoading(true, "刪除中...");
+        fetch(API_URL, {
+            method: 'POST',
+            mode: 'no-cors',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ action: "delete", id: id })
+        }).then(() => {
+            showLoading(false);
+        });
+    }
+
+    function showLoading(show, text="資料同步中...") {
+        const el = document.getElementById('loading');
+        el.textContent = text;
+        el.style.display = show ? 'inline-block' : 'none';
+    }
+
+    function updateSuggestions() {
+        const shops = [...new Set(drinks.map(d => d.shop))];
+        const names = [...new Set(drinks.map(d => d.name))];
+        document.getElementById('shopList').innerHTML = shops.map(s => `<option value="${s}">`).join('');
+        document.getElementById('drinkList').innerHTML = names.map(n => `<option value="${n}">`).join('');
     }
 
     function render() {
@@ -277,35 +273,34 @@
         let ecoSavings = 0;
         let giftValue = 0;
 
+        // 排序
         const sortedDrinks = [...drinks].sort((a, b) => b.id - a.id);
 
         sortedDrinks.forEach(drink => {
-            if (drink.isGift) {
-                giftValue += drink.price;
+            // 轉換 boolean，因為從試算表讀回來可能是字串 "TRUE"
+            const isGift = (drink.isGift === true || drink.isGift === "TRUE" || drink.isGift === "true");
+            const isEco = (drink.isEco === true || drink.isEco === "TRUE" || drink.isEco === "true");
+            
+            if (isGift) {
+                giftValue += parseInt(drink.price);
             } else {
-                totalCost += drink.price;
-                if (drink.isEco) ecoSavings += 5;
+                totalCost += parseInt(drink.price);
+                if (isEco) ecoSavings += 5;
             }
 
             const li = document.createElement('li');
-            
             let classNames = 'drink-item';
-            if (drink.isEco) classNames += ' is-eco';
-            if (drink.isGift) classNames += ' is-gift';
+            if (isEco) classNames += ' is-eco';
+            if (isGift) classNames += ' is-gift';
             li.className = classNames;
             
             let badges = '';
-            if (drink.isEco) badges += '<span class="badge badge-eco">🌿環保杯</span> ';
-            if (drink.isGift) badges += '<span class="badge badge-gift">🎉小確幸</span> ';
+            if (isEco) badges += '<span class="badge badge-eco">🌿環保杯</span> ';
+            if (isGift) badges += '<span class="badge badge-gift">🎉小確幸</span> ';
             
             let priceDisplay = '';
-            if (drink.isGift) {
-                priceDisplay = `
-                    <div class="drink-price-group">
-                        <span class="drink-original-price">原價$${drink.price}</span>
-                        <div class="drink-price">$0</div>
-                    </div>
-                `;
+            if (isGift) {
+                priceDisplay = `<div class="drink-price-group"><span class="drink-original-price">原價$${drink.price}</span><div class="drink-price">$0</div></div>`;
             } else {
                 priceDisplay = `<div class="drink-price">$${drink.price}</div>`;
             }
@@ -326,12 +321,7 @@
         totalCountEl.textContent = drinks.length;
         totalCostEl.textContent = totalCost;
         totalSavedEl.textContent = ecoSavings;
-        
-        if (giftValue > 0) {
-            giftStatEl.textContent = `(賺到 $${giftValue})`;
-        } else {
-            giftStatEl.textContent = '';
-        }
+        giftStatEl.textContent = giftValue > 0 ? `(賺到 $${giftValue})` : '';
     }
 </script>
 
