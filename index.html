@@ -126,12 +126,12 @@
     </div>
 
 <script>
-    // 【⚠️ 重要：請記得把下面這串換成你的 Google Apps Script 網址 ⚠️】
+    // 【⚠️ 請在這裡填入你的 Google Apps Script 網址 ⚠️】
     const API_URL = "https://script.google.com/macros/s/AKfycbyO-bScC6jC1AR0zDS7uqukBCaGWzY6DsZQlB99rfm7HZHYR_q7XzkZfJM-HK14YKjC/exec";
 
     let drinks = [];
     
-    // 初始化
+    // 初始化日期：設定為今天
     const today = new Date();
     const year = today.getFullYear();
     const month = String(today.getMonth() + 1).padStart(2, '0');
@@ -158,7 +158,7 @@
             .then(response => response.json())
             .then(data => {
                 drinks = data;
-                render();
+                render(); // 資料抓回來後，立刻重新排序並顯示
                 showLoading(false);
             })
             .catch(error => {
@@ -173,7 +173,7 @@
         const shop = document.getElementById('shopName').value;
         const name = document.getElementById('drinkName').value;
         
-        // 【更新】這裡取得的是「原價」
+        // 取得原價
         let originalPrice = parseInt(document.getElementById('price').value);
         
         const sugar = document.getElementById('sugar').value;
@@ -186,29 +186,29 @@
             return;
         }
 
-        // 【更新】計算實際支付價格
+        // 計算實際支付價格
         let finalPrice = originalPrice;
         if (isGift) {
-            finalPrice = 0; // 請客不用錢
+            finalPrice = 0;
         } else if (isEco) {
-            finalPrice = originalPrice - 5; // 環保杯折5元
+            finalPrice = originalPrice - 5;
         }
-        // 如果同時勾選，isGift 優先，價格為 0
 
+        // 統一日期格式為 YYYY/MM/DD
         const displayDate = dateInput.replace(/-/g, '/');
         
-        // 【更新】儲存時，同時記錄原價和實際價格
         const newDrink = {
             id: Date.now(),
             date: displayDate,
             shop, name, 
-            price: finalPrice, // 實際支付金額
-            originalPrice: originalPrice, // 原價
+            price: finalPrice, 
+            originalPrice: originalPrice,
             sugar, ice, isEco, isGift
         };
 
-        // UI 先假裝新增成功
+        // 新增到陣列開頭
         drinks.unshift(newDrink);
+        // 重新渲染 (這時候就會觸發排序)
         render();
         
         // 傳送給後端
@@ -270,6 +270,18 @@
         document.getElementById('drinkList').innerHTML = names.map(n => `<option value="${n}">`).join('');
     }
 
+    // 【助手函數】把各種日期格式都轉成純數字 (YYYYMMDD) 方便比對
+    function getDateInt(dateStr) {
+        if (!dateStr) return 0;
+        const d = new Date(dateStr);
+        if (isNaN(d.getTime())) return 0;
+        
+        const y = d.getFullYear();
+        const m = String(d.getMonth() + 1).padStart(2, '0');
+        const day = String(d.getDate()).padStart(2, '0');
+        return parseInt(`${y}${m}${day}`); // 回傳像 20260113 這樣的數字
+    }
+
     function render() {
         const list = document.getElementById('list');
         const totalCountEl = document.getElementById('totalCount');
@@ -284,18 +296,17 @@
         let ecoSavings = 0;
         let giftValue = 0;
 
-        // 【更新】排序邏輯：優先比對「日期」，日期一樣才比對「ID」
+        // 【終極排序邏輯】
         const sortedDrinks = [...drinks].sort((a, b) => {
-            // 1. 先把日期轉成時間格式來比較
-            const dateA = new Date(a.date);
-            const dateB = new Date(b.date);
+            // 1. 把日期轉成數字比大小 (例如 20260113 vs 20260101)
+            const dateIntA = getDateInt(a.date);
+            const dateIntB = getDateInt(b.date);
             
-            // 如果日期不同，日期大的 (比較晚的) 排在前面
-            if (dateB.getTime() !== dateA.getTime()) {
-                return dateB.getTime() - dateA.getTime();
+            if (dateIntB !== dateIntA) {
+                return dateIntB - dateIntA; // 數字大的 (日期新的) 排前面
             }
             
-            // 2. 如果日期完全一樣，就照 ID (建立順序) 排，後記的在上面
+            // 2. 如果日期同一天，比 ID (後記的排前面)
             const idA = typeof a.id === 'number' ? a.id : 0;
             const idB = typeof b.id === 'number' ? b.id : 0;
             return idB - idA;
@@ -304,11 +315,9 @@
         sortedDrinks.forEach(drink => {
             const isGift = (drink.isGift === true || drink.isGift === "TRUE" || drink.isGift === "true");
             const isEco = (drink.isEco === true || drink.isEco === "TRUE" || drink.isEco === "true");
-            
-            // 取得原價
             const originalPrice = drink.originalPrice !== undefined ? drink.originalPrice : drink.price;
 
-            // 日期格式修復
+            // 日期顯示修正
             let displayDate = drink.date;
             const dateObj = new Date(drink.date);
             if (!isNaN(dateObj.getTime())) {
@@ -376,4 +385,5 @@
 
 </body>
 </html>
+
 
