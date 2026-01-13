@@ -1,11 +1,12 @@
 <!DOCTYPE html>
 <html lang="zh-TW">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="飲料紀錄">
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <title>飲料記錄小幫手</title>
     <style>
         /* 米白色/卡其色系主題 */
@@ -17,7 +18,7 @@
             --bg: #F5F1ED; 
             --card-bg: #ffffff; 
         }
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #4A403A; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; padding-bottom: 50px; color: #4A403A; }
         .container { max-width: 500px; margin: 0 auto; }
         
         /* 統計卡片 */
@@ -31,38 +32,33 @@
         /* 輸入表單 */
         .input-group { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #E8E0D9;}
         
-        /* 修正點：統一所有輸入框的樣式設定 */
+        /* 輸入框樣式 */
         input[type="date"], 
         input[type="text"], 
         input[type="number"], 
         select { 
             width: 100%; 
-            padding: 12px; /* 統一高度 */
+            padding: 12px; 
             margin-bottom: 12px; 
             border: 1px solid #DBC4A9; 
             border-radius: 8px; 
-            box-sizing: border-box; /* 關鍵修正：讓寬度包含內距，不會凸出去 */
+            box-sizing: border-box; /* 確保寬度整齊 */
             background-color: #FFFCF9; 
             color: #5D534A; 
             outline: none;
             font-family: inherit;
-            font-size: 1em; /* 確保字體大小一致 */
-            -webkit-appearance: none; /* iOS Safari 修正 */
-        }
-        
-        /* 針對 Date 輸入框的特別微調 (修正 iOS 預設樣式) */
-        input[type="date"] {
-            display: block;
+            font-size: 1em;
             -webkit-appearance: none;
         }
-
+        
+        input[type="date"] { display: block; }
         input:focus, select:focus { border-color: var(--primary); }
 
         /* 選項區塊 */
-        .options-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        .options-row { display: flex; gap: 15px; margin-bottom: 20px; }
         
-        .checkbox-wrapper { flex: 1; display: flex; align-items: center; padding: 8px; cursor: pointer; background: #FFFCF9; border: 1px solid #DBC4A9; border-radius: 8px; }
-        .checkbox-wrapper:hover { background: #FDF5EE; }
+        .checkbox-wrapper { flex: 1; display: flex; align-items: center; padding: 10px; cursor: pointer; background: #FFFCF9; border: 1px solid #DBC4A9; border-radius: 8px; }
+        .checkbox-wrapper:active { background: #FDF5EE; }
         .checkbox-wrapper input { width: auto; margin: 0 8px 0 0; transform: scale(1.2); cursor: pointer; accent-color: var(--green); }
         .checkbox-wrapper label { cursor: pointer; font-weight: 500; color: #5D534A; font-size: 0.95em; flex-grow: 1;}
         
@@ -70,6 +66,7 @@
         .eco-tag { color: var(--green); font-size: 0.8em; font-weight: bold;}
         .gift-tag { color: var(--gold); font-size: 0.8em; font-weight: bold;}
 
+        /* 按鈕樣式 */
         button { width: 100%; background: var(--primary); color: var(--primary-text); border: none; padding: 15px; border-radius: 8px; font-size: 1em; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 3px 6px rgba(199, 178, 153, 0.2); }
         button:hover { background: #BFA88E; }
         button:active { transform: scale(0.98); box-shadow: none; }
@@ -158,4 +155,185 @@
             <div class="checkbox-wrapper gift-wrapper" onclick="toggleGift()">
                 <input type="checkbox" id="isGift" onclick="event.stopPropagation()">
                 <label for="isGift">別人請客</label>
-                <span class="gift-tag">免費
+                <span class="gift-tag">免費</span>
+            </div>
+        </div>
+
+        <button onclick="addDrink()">＋ 記錄一杯</button>
+    </div>
+
+    <h3>最近喝了什麼...</h3>
+    <ul class="drink-list" id="list">
+        </ul>
+    
+    <button onclick="clearAll()" style="background: #E0D6CD; color: #8C7B65; margin-top: 25px; font-size: 0.9em; box-shadow: none;">清除所有記錄</button>
+</div>
+
+<script>
+    let drinks = JSON.parse(localStorage.getItem('myDrinks_v2')) || [];
+    
+    // 初始化檢查
+    if(drinks.length > 0) {
+        let dirty = false;
+        drinks = drinks.map(d => {
+            if(d.isEco === undefined) { d.isEco = false; dirty = true; }
+            if(d.isGift === undefined) { d.isGift = false; dirty = true; } 
+            return d;
+        });
+        if(dirty) saveAndRender();
+    }
+
+    // 設定預設日期為今天
+    const today = new Date();
+    // 修正時區問題，使用本地時間
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    document.getElementById('recordDate').value = `${year}-${month}-${day}`;
+    
+    render();
+
+    function toggleEco() {
+        const cb = document.getElementById('isEco');
+        cb.checked = !cb.checked;
+    }
+    
+    function toggleGift() {
+        const cb = document.getElementById('isGift');
+        cb.checked = !cb.checked;
+    }
+
+    function updateSuggestions() {
+        const shops = [...new Set(drinks.map(d => d.shop))];
+        const names = [...new Set(drinks.map(d => d.name))];
+        document.getElementById('shopList').innerHTML = shops.map(s => `<option value="${s}">`).join('');
+        document.getElementById('drinkList').innerHTML = names.map(n => `<option value="${n}">`).join('');
+    }
+
+    function addDrink() {
+        const dateInput = document.getElementById('recordDate').value;
+        const shop = document.getElementById('shopName').value;
+        const name = document.getElementById('drinkName').value;
+        let price = parseInt(document.getElementById('price').value);
+        const sugar = document.getElementById('sugar').value;
+        const ice = document.getElementById('ice').value;
+        const isEco = document.getElementById('isEco').checked;
+        const isGift = document.getElementById('isGift').checked;
+
+        if (!shop || !name || isNaN(price) || !dateInput) {
+            alert("請填寫完整資訊喔！");
+            return;
+        }
+
+        const displayDate = dateInput.replace(/-/g, '/');
+
+        const newDrink = {
+            id: Date.now(),
+            shop, name, price, sugar, ice, isEco, isGift,
+            date: displayDate
+        };
+
+        drinks.unshift(newDrink);
+        saveAndRender();
+        
+        // 保留日期，清空其他
+        document.getElementById('shopName').value = '';
+        document.getElementById('drinkName').value = '';
+        document.getElementById('price').value = '';
+        document.getElementById('isEco').checked = false;
+        document.getElementById('isGift').checked = false; 
+    }
+
+    function deleteDrink(id) {
+        if(confirm('確定要刪除這筆記錄嗎？')) {
+            drinks = drinks.filter(drink => drink.id !== id);
+            saveAndRender();
+        }
+    }
+
+    function clearAll() {
+        if(confirm('確定要清空所有記錄嗎？不可恢復喔！')) {
+            drinks = [];
+            saveAndRender();
+        }
+    }
+
+    function saveAndRender() {
+        localStorage.setItem('myDrinks_v2', JSON.stringify(drinks));
+        render();
+    }
+
+    function render() {
+        const list = document.getElementById('list');
+        const totalCountEl = document.getElementById('totalCount');
+        const totalCostEl = document.getElementById('totalCost');
+        const totalSavedEl = document.getElementById('totalSaved');
+        const giftStatEl = document.getElementById('giftStat');
+        
+        updateSuggestions();
+        
+        list.innerHTML = '';
+        let totalCost = 0;
+        let ecoSavings = 0;
+        let giftValue = 0;
+
+        const sortedDrinks = [...drinks].sort((a, b) => b.id - a.id);
+
+        sortedDrinks.forEach(drink => {
+            if (drink.isGift) {
+                giftValue += drink.price;
+            } else {
+                totalCost += drink.price;
+                if (drink.isEco) ecoSavings += 5;
+            }
+
+            const li = document.createElement('li');
+            
+            let classNames = 'drink-item';
+            if (drink.isEco) classNames += ' is-eco';
+            if (drink.isGift) classNames += ' is-gift';
+            li.className = classNames;
+            
+            let badges = '';
+            if (drink.isEco) badges += '<span class="badge badge-eco">🌿環保杯</span> ';
+            if (drink.isGift) badges += '<span class="badge badge-gift">🎉小確幸</span> ';
+            
+            let priceDisplay = '';
+            if (drink.isGift) {
+                priceDisplay = `
+                    <div class="drink-price-group">
+                        <span class="drink-original-price">原價$${drink.price}</span>
+                        <div class="drink-price">$0</div>
+                    </div>
+                `;
+            } else {
+                priceDisplay = `<div class="drink-price">$${drink.price}</div>`;
+            }
+
+            li.innerHTML = `
+                <div class="drink-info">
+                    <h4>${drink.shop} - ${drink.name} ${badges}</h4>
+                    <span class="drink-detail">${drink.date} | ${drink.sugar} / ${drink.ice}</span>
+                </div>
+                <div style="display:flex; align-items:center;">
+                    ${priceDisplay}
+                    <button class="delete-btn" onclick="deleteDrink(${drink.id})">✕</button>
+                </div>
+            `;
+            list.appendChild(li);
+        });
+
+        totalCountEl.textContent = drinks.length;
+        totalCostEl.textContent = totalCost;
+        totalSavedEl.textContent = ecoSavings;
+        
+        if (giftValue > 0) {
+            giftStatEl.textContent = `(賺到 $${giftValue})`;
+        } else {
+            giftStatEl.textContent = '';
+        }
+    }
+</script>
+
+</body>
+</html>
