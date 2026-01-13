@@ -274,13 +274,31 @@
         let giftValue = 0;
 
         // 排序
-        const sortedDrinks = [...drinks].sort((a, b) => b.id - a.id);
+        const sortedDrinks = [...drinks].sort((a, b) => {
+            // 修正排序：如果 id 不是數字（舊資料），就比對日期
+            const idA = typeof a.id === 'number' ? a.id : 0;
+            const idB = typeof b.id === 'number' ? b.id : 0;
+            return idB - idA;
+        });
 
         sortedDrinks.forEach(drink => {
-            // 轉換 boolean，因為從試算表讀回來可能是字串 "TRUE"
+            // 1. 轉換 boolean (處理字串 "TRUE" 的問題)
             const isGift = (drink.isGift === true || drink.isGift === "TRUE" || drink.isGift === "true");
             const isEco = (drink.isEco === true || drink.isEco === "TRUE" || drink.isEco === "true");
             
+            // 2. 【關鍵修正】日期格式化：把 "2026-01-12T16:00..." 轉回 "2026/01/13"
+            let displayDate = drink.date;
+            // 嘗試把日期字串轉成時間物件
+            const dateObj = new Date(drink.date);
+            // 如果轉換成功，就格式化成 YYYY/MM/DD
+            if (!isNaN(dateObj.getTime())) {
+                const year = dateObj.getFullYear();
+                const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+                const day = String(dateObj.getDate()).padStart(2, '0');
+                displayDate = `${year}/${month}/${day}`;
+            }
+
+            // 3. 計算金額
             if (isGift) {
                 giftValue += parseInt(drink.price);
             } else {
@@ -305,10 +323,11 @@
                 priceDisplay = `<div class="drink-price">$${drink.price}</div>`;
             }
 
+            // 注意：這裡顯示的是變數 ${displayDate} 而不是原本的 ${drink.date}
             li.innerHTML = `
                 <div class="drink-info">
                     <h4>${drink.shop} - ${drink.name} ${badges}</h4>
-                    <span class="drink-detail">${drink.date} | ${drink.sugar} / ${drink.ice}</span>
+                    <span class="drink-detail">${displayDate} | ${drink.sugar} / ${drink.ice}</span>
                 </div>
                 <div style="display:flex; align-items:center;">
                     ${priceDisplay}
@@ -327,3 +346,4 @@
 
 </body>
 </html>
+
