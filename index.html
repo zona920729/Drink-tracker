@@ -127,7 +127,7 @@
 
 <script>
     // 【⚠️ 重要：請記得把下面這串換成你的 Google Apps Script 網址 ⚠️】
-    const API_URL = "請把你的GoogleAppsScript網址貼在這裡";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyO-bScC6jC1AR0zDS7uqukBCaGWzY6DsZQlB99rfm7HZHYR_q7XzkZfJM-HK14YKjC/exec";
 
     let drinks = [];
     
@@ -172,22 +172,39 @@
         const dateInput = document.getElementById('recordDate').value;
         const shop = document.getElementById('shopName').value;
         const name = document.getElementById('drinkName').value;
-        let price = parseInt(document.getElementById('price').value);
+        
+        // 【更新】這裡取得的是「原價」
+        let originalPrice = parseInt(document.getElementById('price').value);
+        
         const sugar = document.getElementById('sugar').value;
         const ice = document.getElementById('ice').value;
         const isEco = document.getElementById('isEco').checked;
         const isGift = document.getElementById('isGift').checked;
 
-        if (!shop || !name || isNaN(price) || !dateInput) {
+        if (!shop || !name || isNaN(originalPrice) || !dateInput) {
             alert("請填寫完整資訊喔！");
             return;
         }
 
+        // 【更新】計算實際支付價格
+        let finalPrice = originalPrice;
+        if (isGift) {
+            finalPrice = 0; // 請客不用錢
+        } else if (isEco) {
+            finalPrice = originalPrice - 5; // 環保杯折5元
+        }
+        // 如果同時勾選，isGift 優先，價格為 0
+
         const displayDate = dateInput.replace(/-/g, '/');
+        
+        // 【更新】儲存時，同時記錄原價和實際價格
         const newDrink = {
             id: Date.now(),
             date: displayDate,
-            shop, name, price, sugar, ice, isEco, isGift
+            shop, name, 
+            price: finalPrice, // 實際支付金額
+            originalPrice: originalPrice, // 原價
+            sugar, ice, isEco, isGift
         };
 
         // UI 先假裝新增成功
@@ -278,6 +295,9 @@
             const isGift = (drink.isGift === true || drink.isGift === "TRUE" || drink.isGift === "true");
             const isEco = (drink.isEco === true || drink.isEco === "TRUE" || drink.isEco === "true");
             
+            // 【更新】取得原價，相容舊資料
+            const originalPrice = drink.originalPrice !== undefined ? drink.originalPrice : drink.price;
+
             // 日期修復邏輯
             let displayDate = drink.date;
             const dateObj = new Date(drink.date);
@@ -289,9 +309,9 @@
             }
 
             if (isGift) {
-                giftValue += parseInt(drink.price);
+                giftValue += parseInt(originalPrice); // 賺到的是原價
             } else {
-                totalCost += parseInt(drink.price);
+                totalCost += parseInt(drink.price); // 自己花的是實際價格
                 if (isEco) ecoSavings += 5;
             }
 
@@ -305,10 +325,26 @@
             if (isEco) badges += '<span class="badge badge-eco">🌿環保杯</span> ';
             if (isGift) badges += '<span class="badge badge-gift">🎉小確幸</span> ';
             
+            // 【更新】價格顯示邏輯
             let priceDisplay = '';
             if (isGift) {
-                priceDisplay = `<div class="drink-price-group"><span class="drink-original-price">原價$${drink.price}</span><div class="drink-price">$0</div></div>`;
+                // 請客：顯示原價劃掉，價格 $0
+                priceDisplay = `
+                    <div class="drink-price-group">
+                        <span class="drink-original-price">原價$${originalPrice}</span>
+                        <div class="drink-price">$0</div>
+                    </div>
+                `;
+            } else if (isEco) {
+                // 環保杯：顯示原價劃掉，價格為折扣後價格
+                priceDisplay = `
+                    <div class="drink-price-group">
+                        <span class="drink-original-price">原價$${originalPrice}</span>
+                        <div class="drink-price">$${drink.price}</div>
+                    </div>
+                `;
             } else {
+                // 一般：只顯示原價
                 priceDisplay = `<div class="drink-price">$${drink.price}</div>`;
             }
 
@@ -334,8 +370,3 @@
 
 </body>
 </html>
-
-</body>
-</html>
-
-
