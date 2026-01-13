@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="飲料紀錄">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>飲料記錄小幫手</title>
+    <style>
+        /* 米白色/卡其色系主題 */
+        :root { 
+            --primary: #C7B299; 
+            --primary-text: #4A403A; 
+            --green: #558B6E; 
+            --gold: #D4A017; 
+            --bg: #F5F1ED; 
+            --card-bg: #ffffff; 
+        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg); margin: 0; padding: 20px; color: #4A403A; }
+        .container { max-width: 500px; margin: 0 auto; }
+        
+        /* 統計卡片 */
+        .stats-card { background: var(--primary); color: var(--primary-text); padding: 20px; border-radius: 15px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 20px; box-shadow: 0 4px 10px rgba(199, 178, 153, 0.3); }
+        .stat-item { text-align: center; }
+        .stat-val { font-size: 1.4em; font-weight: bold; }
+        .stat-label { font-size: 0.8em; opacity: 0.8; margin-top: 5px; font-weight: 500;}
+        .eco-stat .stat-val, .eco-stat .stat-label { color: #2c5e42; }
+        .gift-stat { color: #4A403A; font-size: 0.7em; margin-top: 5px; opacity: 0.9; }
+
+        /* 輸入表單 */
+        .input-group { background: var(--card-bg); padding: 20px; border-radius: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #E8E0D9;}
+        
+        /* 修正點：統一所有輸入框的樣式設定 */
+        input[type="date"], 
+        input[type="text"], 
+        input[type="number"], 
+        select { 
+            width: 100%; 
+            padding: 12px; /* 統一高度 */
+            margin-bottom: 12px; 
+            border: 1px solid #DBC4A9; 
+            border-radius: 8px; 
+            box-sizing: border-box; /* 關鍵修正：讓寬度包含內距，不會凸出去 */
+            background-color: #FFFCF9; 
+            color: #5D534A; 
+            outline: none;
+            font-family: inherit;
+            font-size: 1em; /* 確保字體大小一致 */
+            -webkit-appearance: none; /* iOS Safari 修正 */
+        }
+        
+        /* 針對 Date 輸入框的特別微調 (修正 iOS 預設樣式) */
+        input[type="date"] {
+            display: block;
+            -webkit-appearance: none;
+        }
+
+        input:focus, select:focus { border-color: var(--primary); }
+
+        /* 選項區塊 */
+        .options-row { display: flex; gap: 15px; margin-bottom: 15px; }
+        
+        .checkbox-wrapper { flex: 1; display: flex; align-items: center; padding: 8px; cursor: pointer; background: #FFFCF9; border: 1px solid #DBC4A9; border-radius: 8px; }
+        .checkbox-wrapper:hover { background: #FDF5EE; }
+        .checkbox-wrapper input { width: auto; margin: 0 8px 0 0; transform: scale(1.2); cursor: pointer; accent-color: var(--green); }
+        .checkbox-wrapper label { cursor: pointer; font-weight: 500; color: #5D534A; font-size: 0.95em; flex-grow: 1;}
+        
+        .checkbox-wrapper.gift-wrapper input { accent-color: var(--gold); }
+        .eco-tag { color: var(--green); font-size: 0.8em; font-weight: bold;}
+        .gift-tag { color: var(--gold); font-size: 0.8em; font-weight: bold;}
+
+        button { width: 100%; background: var(--primary); color: var(--primary-text); border: none; padding: 15px; border-radius: 8px; font-size: 1em; cursor: pointer; font-weight: bold; transition: 0.2s; box-shadow: 0 3px 6px rgba(199, 178, 153, 0.2); }
+        button:hover { background: #BFA88E; }
+        button:active { transform: scale(0.98); box-shadow: none; }
+
+        /* 列表 */
+        h3 { margin-top: 30px; color: #7D7065; font-weight: 600; }
+        .drink-list { list-style: none; padding: 0; }
+        .drink-item { background: var(--card-bg); padding: 15px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.03); animation: fadeIn 0.3s ease; position: relative; overflow: hidden; border: 1px solid #F0EAE5;}
+        
+        .drink-item.is-eco { border-left: 5px solid var(--green); }
+        .drink-item.is-gift { border-left: 5px solid var(--gold); background-color: #FFFDF5; }
+        .drink-item.is-eco.is-gift { border-left-width: 5px; border-left-style: solid; border-image: linear-gradient(to bottom, var(--green), var(--gold)) 1 100%; }
+
+        .drink-info h4 { margin: 0 0 6px 0; font-size: 1.1em; display: flex; align-items: center; color: #4A403A; flex-wrap: wrap; gap: 5px;}
+        
+        .badge { font-size: 0.75em; padding: 3px 7px; border-radius: 6px; font-weight: bold; display: inline-block;}
+        .badge-eco { background: #E3F0E9; color: var(--green); }
+        .badge-gift { background: #FFF3CD; color: #856404; }
+        
+        .drink-detail { font-size: 0.85em; color: #9C8E83; }
+        .drink-price-group { text-align: right; }
+        .drink-price { font-weight: bold; color: #8C7B65; font-size: 1.2em; }
+        .drink-original-price { font-size: 0.75em; color: #bbb; text-decoration: line-through; display: block;}
+        
+        .delete-btn { background: #E6C9C9; color: #A85555; border: none; border-radius: 6px; padding: 6px 12px; font-size: 0.8em; margin-left: 12px; cursor: pointer; box-shadow: none; width: auto;}
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="stats-card">
+        <div class="stat-item">
+            <div class="stat-val" id="totalCount">0</div>
+            <div class="stat-label">累積杯數</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-val">$<span id="totalCost">0</span></div>
+            <div class="stat-label">自己花費
+                <div class="gift-stat" id="giftStat"></div>
+            </div>
+        </div>
+        <div class="stat-item eco-stat">
+            <div class="stat-val">$<span id="totalSaved">0</span></div>
+            <div class="stat-label">🌿環保省下</div>
+        </div>
+    </div>
+
+    <div class="input-group">
+        <label style="font-size: 0.85em; color: #7D7065; margin-left: 2px; margin-bottom: 5px; display:block;">購買日期</label>
+        <input type="date" id="recordDate" />
+
+        <input type="text" id="shopName" list="shopList" placeholder="店家名稱 (例如: 儒記)" />
+        <datalist id="shopList"></datalist>
+
+        <input type="text" id="drinkName" list="drinkList" placeholder="飲料品項 (例如: 紅茶拿鐵)" />
+        <datalist id="drinkList"></datalist>
+
+        <div style="display: flex; gap: 10px;">
+            <select id="sugar">
+                <option value="全糖">全糖</option>
+                <option value="少糖">少糖</option>
+                <option value="半糖">半糖</option>
+                <option value="微糖">微糖</option>
+                <option value="一分糖">一分糖</option>
+                <option value="無糖">無糖</option>
+            </select>
+            <select id="ice">
+                <option value="正常冰">正常冰</option>
+                <option value="少冰">少冰</option>
+                <option value="微冰">微冰</option>
+                <option value="去冰">去冰</option>
+                <option value="熱">熱</option>
+            </select>
+        </div>
+        
+        <input type="number" id="price" placeholder="請輸入飲料原價" />
+        
+        <div class="options-row">
+            <div class="checkbox-wrapper" onclick="toggleEco()">
+                <input type="checkbox" id="isEco" onclick="event.stopPropagation()">
+                <label for="isEco">環保杯</label>
+                <span class="eco-tag">省$5</span>
+            </div>
+            <div class="checkbox-wrapper gift-wrapper" onclick="toggleGift()">
+                <input type="checkbox" id="isGift" onclick="event.stopPropagation()">
+                <label for="isGift">別人請客</label>
+                <span class="gift-tag">免費
