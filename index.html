@@ -284,8 +284,18 @@
         let ecoSavings = 0;
         let giftValue = 0;
 
-        // 排序
+        // 【更新】排序邏輯：優先比對「日期」，日期一樣才比對「ID」
         const sortedDrinks = [...drinks].sort((a, b) => {
+            // 1. 先把日期轉成時間格式來比較
+            const dateA = new Date(a.date);
+            const dateB = new Date(b.date);
+            
+            // 如果日期不同，日期大的 (比較晚的) 排在前面
+            if (dateB.getTime() !== dateA.getTime()) {
+                return dateB.getTime() - dateA.getTime();
+            }
+            
+            // 2. 如果日期完全一樣，就照 ID (建立順序) 排，後記的在上面
             const idA = typeof a.id === 'number' ? a.id : 0;
             const idB = typeof b.id === 'number' ? b.id : 0;
             return idB - idA;
@@ -295,10 +305,10 @@
             const isGift = (drink.isGift === true || drink.isGift === "TRUE" || drink.isGift === "true");
             const isEco = (drink.isEco === true || drink.isEco === "TRUE" || drink.isEco === "true");
             
-            // 【更新】取得原價，相容舊資料
+            // 取得原價
             const originalPrice = drink.originalPrice !== undefined ? drink.originalPrice : drink.price;
 
-            // 日期修復邏輯
+            // 日期格式修復
             let displayDate = drink.date;
             const dateObj = new Date(drink.date);
             if (!isNaN(dateObj.getTime())) {
@@ -309,9 +319,9 @@
             }
 
             if (isGift) {
-                giftValue += parseInt(originalPrice); // 賺到的是原價
+                giftValue += parseInt(originalPrice); 
             } else {
-                totalCost += parseInt(drink.price); // 自己花的是實際價格
+                totalCost += parseInt(drink.price);
                 if (isEco) ecoSavings += 5;
             }
 
@@ -325,10 +335,8 @@
             if (isEco) badges += '<span class="badge badge-eco">🌿環保杯</span> ';
             if (isGift) badges += '<span class="badge badge-gift">🎉小確幸</span> ';
             
-            // 【更新】價格顯示邏輯
             let priceDisplay = '';
             if (isGift) {
-                // 請客：顯示原價劃掉，價格 $0
                 priceDisplay = `
                     <div class="drink-price-group">
                         <span class="drink-original-price">原價$${originalPrice}</span>
@@ -336,7 +344,6 @@
                     </div>
                 `;
             } else if (isEco) {
-                // 環保杯：顯示原價劃掉，價格為折扣後價格
                 priceDisplay = `
                     <div class="drink-price-group">
                         <span class="drink-original-price">原價$${originalPrice}</span>
@@ -344,7 +351,6 @@
                     </div>
                 `;
             } else {
-                // 一般：只顯示原價
                 priceDisplay = `<div class="drink-price">$${drink.price}</div>`;
             }
 
@@ -370,3 +376,4 @@
 
 </body>
 </html>
+
